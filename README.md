@@ -13,47 +13,28 @@ An iOS application built with UIKit to track rental property investments and cal
 - Add, edit, and delete properties
 - Data persistence using UserDefaults
 
-## Setup Instructions
+## Getting Started
 
-### Option 1: Create Xcode Project (Recommended)
+The Xcode project is already set up and ready to use!
 
-1. Open Xcode
-2. Create a new project:
-   - File → New → Project
-   - Choose "App" under iOS
-   - Product Name: `RentalROI`
-   - Interface: `Storyboard` (we'll delete it)
-   - Language: `Swift`
-   - Use Core Data: `No`
-   - Include Tests: Optional
+### To Run the App
 
-3. Delete the default `Main.storyboard` file and remove it from the project
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/ray8084/rentalROI.git
+   cd rentalROI
+   ```
 
-4. Delete the `ViewController.swift` file
+2. Open the project in Xcode:
+   ```bash
+   open RentalROI.xcodeproj
+   ```
 
-5. In the project settings:
-   - Go to the project target → General tab
-   - Set "Main Interface" to empty (clear the field)
-   - Go to Info tab → Custom iOS Target Properties
-   - Remove `UISceneStoryboardFile` if present
+3. Select a simulator or device from the scheme menu
 
-6. Copy all the files from this repository:
-   - `RentalROI/AppDelegate.swift` → Replace the default AppDelegate
-   - `RentalROI/SceneDelegate.swift` → Add to project
-   - `RentalROI/Models/Property.swift` → Add to project (create Models group if needed)
-   - `RentalROI/Managers/PropertyDataManager.swift` → Add to project (create Managers group if needed)
-   - `RentalROI/Views/PropertyListViewController.swift` → Add to project (create Views group if needed)
-   - `RentalROI/Views/PropertyCollectionViewCell.swift` → Add to project
-   - `RentalROI/Views/PropertyDetailViewController.swift` → Add to project
-   - `RentalROI/Supporting/Info.plist` → Update or replace your Info.plist
+4. Click Run (⌘R) or press the Play button
 
-7. Ensure all files are added to the target membership in Xcode
-
-8. Build and run!
-
-### Option 2: Using Project Generator Script
-
-If you have `xcodegen` installed, you can use the project.yml configuration.
+The app will build and launch with all features ready to use!
 
 ## Project Structure
 
