@@ -39,11 +39,12 @@ class PropertyListViewController: UIViewController {
         layout.minimumLineSpacing = 16
         layout.sectionInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
         
+        // Single column layout for wider cards
         let spacing: CGFloat = 16
-        let itemsPerRow: CGFloat = 2
+        let itemsPerRow: CGFloat = 1
         let totalSpacing = spacing * (itemsPerRow - 1) + (layout.sectionInset.left + layout.sectionInset.right)
         let itemWidth = (view.bounds.width - totalSpacing) / itemsPerRow
-        layout.itemSize = CGSize(width: itemWidth, height: 180)
+        layout.itemSize = CGSize(width: itemWidth, height: 140)
         
         collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: layout)
         collectionView.backgroundColor = .clear
@@ -132,10 +133,10 @@ extension PropertyListViewController: UICollectionViewDelegate {
 extension PropertyListViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let layout = collectionViewLayout as! UICollectionViewFlowLayout
-        let spacing = layout.minimumInteritemSpacing * 1 + layout.sectionInset.left + layout.sectionInset.right
-        let itemsPerRow: CGFloat = 2
+        // Single column layout for wider cards
+        let itemsPerRow: CGFloat = 1
         let totalSpacing = layout.minimumInteritemSpacing * (itemsPerRow - 1) + layout.sectionInset.left + layout.sectionInset.right
         let itemWidth = (collectionView.bounds.width - totalSpacing) / itemsPerRow
-        return CGSize(width: itemWidth, height: 180)
+        return CGSize(width: itemWidth, height: 140)
     }
 }

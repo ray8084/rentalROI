@@ -41,14 +41,35 @@ class PropertyCollectionViewCell: UICollectionViewCell {
     
     private let roiLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.boldSystemFont(ofSize: 24)
+        label.font = UIFont.boldSystemFont(ofSize: 32)
+        label.textAlignment = .right
         return label
     }()
     
-    private let stackView: UIStackView = {
+    private let leftColumnStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 6
+        stack.alignment = .leading
+        stack.distribution = .fill
+        return stack
+    }()
+    
+    private let rightColumnStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
         stack.spacing = 8
+        stack.alignment = .trailing
+        stack.distribution = .fill
+        return stack
+    }()
+    
+    private let mainStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = 16
+        stack.alignment = .top
+        stack.distribution = .fill
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }()
@@ -70,19 +91,31 @@ class PropertyCollectionViewCell: UICollectionViewCell {
         contentView.layer.shadowOpacity = 0.1
         contentView.layer.shadowRadius = 4
         
-        stackView.addArrangedSubview(nameLabel)
-        stackView.addArrangedSubview(initialInvestmentLabel)
-        stackView.addArrangedSubview(appreciationLabel)
-        stackView.addArrangedSubview(rentalIncomeLabel)
-        stackView.addArrangedSubview(roiLabel)
+        // Left column: Property details
+        leftColumnStackView.addArrangedSubview(nameLabel)
+        leftColumnStackView.addArrangedSubview(initialInvestmentLabel)
+        leftColumnStackView.addArrangedSubview(appreciationLabel)
+        leftColumnStackView.addArrangedSubview(rentalIncomeLabel)
         
-        contentView.addSubview(stackView)
+        // Right column: ROI
+        rightColumnStackView.addArrangedSubview(roiLabel)
+        
+        // Main horizontal stack with two columns
+        mainStackView.addArrangedSubview(leftColumnStackView)
+        mainStackView.addArrangedSubview(rightColumnStackView)
+        
+        contentView.addSubview(mainStackView)
+        
+        // Set column widths - left column flexible, right column fixed size for ROI
+        leftColumnStackView.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        rightColumnStackView.setContentHuggingPriority(.required, for: .horizontal)
+        rightColumnStackView.setContentCompressionResistancePriority(.required, for: .horizontal)
         
         NSLayoutConstraint.activate([
-            stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
-            stackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            stackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            stackView.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -16)
+            mainStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+            mainStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            mainStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            mainStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12)
         ])
     }
     
@@ -103,7 +136,7 @@ class PropertyCollectionViewCell: UICollectionViewCell {
         rentalIncomeLabel.text = "Rental Income: \(currencyFormatter.string(from: NSNumber(value: property.totalRentalIncome)) ?? "$0")"
         
         let roiValue = property.roi
-        roiLabel.text = String(format: "%.1f%% ROI", roiValue)
+        roiLabel.text = String(format: "%.1f%%", roiValue)
         roiLabel.textColor = roiValue >= 0 ? .systemGreen : .systemRed
     }
     
