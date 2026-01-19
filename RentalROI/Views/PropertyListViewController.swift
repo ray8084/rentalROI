@@ -44,7 +44,7 @@ class PropertyListViewController: UIViewController {
         let itemsPerRow: CGFloat = 1
         let totalSpacing = spacing * (itemsPerRow - 1) + (layout.sectionInset.left + layout.sectionInset.right)
         let itemWidth = (view.bounds.width - totalSpacing) / itemsPerRow
-        layout.itemSize = CGSize(width: itemWidth, height: 120)
+        layout.itemSize = CGSize(width: itemWidth, height: 140)
         
         collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: layout)
         collectionView.backgroundColor = .clear
@@ -137,6 +137,6 @@ extension PropertyListViewController: UICollectionViewDelegateFlowLayout {
         let itemsPerRow: CGFloat = 1
         let totalSpacing = layout.minimumInteritemSpacing * (itemsPerRow - 1) + layout.sectionInset.left + layout.sectionInset.right
         let itemWidth = (collectionView.bounds.width - totalSpacing) / itemsPerRow
-        return CGSize(width: itemWidth, height: 120)
+        return CGSize(width: itemWidth, height: 140)
     }
 }

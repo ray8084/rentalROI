@@ -57,7 +57,7 @@ class PropertyDetailViewController: UIViewController {
     
     private let rentalIncomeTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "Total Rental Income"
+        textField.placeholder = "Average Monthly Rent"
         textField.keyboardType = .decimalPad
         textField.borderStyle = .roundedRect
         textField.font = UIFont.systemFont(ofSize: 16)
@@ -79,6 +79,36 @@ class PropertyDetailViewController: UIViewController {
         let textField = UITextField()
         textField.placeholder = "Purchase Year"
         textField.keyboardType = .numberPad
+        textField.borderStyle = .roundedRect
+        textField.font = UIFont.systemFont(ofSize: 16)
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        return textField
+    }()
+    
+    private let remodelingExpensesTextField: UITextField = {
+        let textField = UITextField()
+        textField.placeholder = "Remodeling Expenses"
+        textField.keyboardType = .decimalPad
+        textField.borderStyle = .roundedRect
+        textField.font = UIFont.systemFont(ofSize: 16)
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        return textField
+    }()
+    
+    private let landPercentageTextField: UITextField = {
+        let textField = UITextField()
+        textField.placeholder = "Land Percentage"
+        textField.keyboardType = .decimalPad
+        textField.borderStyle = .roundedRect
+        textField.font = UIFont.systemFont(ofSize: 16)
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        return textField
+    }()
+    
+    private let taxRateTextField: UITextField = {
+        let textField = UITextField()
+        textField.placeholder = "Tax Rate"
+        textField.keyboardType = .decimalPad
         textField.borderStyle = .roundedRect
         textField.font = UIFont.systemFont(ofSize: 16)
         textField.translatesAutoresizingMaskIntoConstraints = false
@@ -157,14 +187,23 @@ class PropertyDetailViewController: UIViewController {
         stackView.addArrangedSubview(createLabel(text: "Appreciation"))
         stackView.addArrangedSubview(appreciationTextField)
         
-        stackView.addArrangedSubview(createLabel(text: "Total Rental Income"))
+        stackView.addArrangedSubview(createLabel(text: "Average Monthly Rent"))
         stackView.addArrangedSubview(rentalIncomeTextField)
         
-        stackView.addArrangedSubview(createLabel(text: "Expense Percentage (%)"))
+        stackView.addArrangedSubview(createLabel(text: "Operating Expense Percentage (%)"))
         stackView.addArrangedSubview(expensePercentageTextField)
         
         stackView.addArrangedSubview(createLabel(text: "Purchase Year"))
         stackView.addArrangedSubview(purchaseYearTextField)
+        
+        stackView.addArrangedSubview(createLabel(text: "Remodeling Expenses"))
+        stackView.addArrangedSubview(remodelingExpensesTextField)
+        
+        stackView.addArrangedSubview(createLabel(text: "Land Percentage (%)"))
+        stackView.addArrangedSubview(landPercentageTextField)
+        
+        stackView.addArrangedSubview(createLabel(text: "Tax Rate (%)"))
+        stackView.addArrangedSubview(taxRateTextField)
         
         stackView.addArrangedSubview(roiLabel)
         
@@ -190,19 +229,27 @@ class PropertyDetailViewController: UIViewController {
             nameTextField.text = property.name
             initialInvestmentTextField.text = String(format: "%.2f", property.initialInvestment)
             appreciationTextField.text = String(format: "%.2f", property.appreciation)
-            rentalIncomeTextField.text = String(format: "%.2f", property.totalRentalIncome)
+            // Convert annual income to monthly rent for display
+            rentalIncomeTextField.text = String(format: "%.2f", property.totalRentalIncome / 12)
             expensePercentageTextField.text = String(format: "%.1f", property.expensePercentageValue)
             purchaseYearTextField.text = String(property.purchaseYearValue)
+            remodelingExpensesTextField.text = String(format: "%.2f", property.remodelingExpensesValue)
+            landPercentageTextField.text = String(format: "%.1f", property.landPercentageValue)
+            taxRateTextField.text = String(format: "%.1f", property.taxRateValue)
         } else {
             // Set defaults for new property
             expensePercentageTextField.text = "50.0"
             let currentYear = Calendar.current.component(.year, from: Date())
             purchaseYearTextField.text = String(currentYear)
+            remodelingExpensesTextField.text = "0.0"
+            landPercentageTextField.text = "20.0"
+            taxRateTextField.text = "25.0"
+            rentalIncomeTextField.text = "0.0"
         }
     }
     
     private func setupTextFields() {
-        [initialInvestmentTextField, appreciationTextField, rentalIncomeTextField, expensePercentageTextField, purchaseYearTextField].forEach { textField in
+        [initialInvestmentTextField, appreciationTextField, rentalIncomeTextField, expensePercentageTextField, purchaseYearTextField, remodelingExpensesTextField, landPercentageTextField, taxRateTextField].forEach { textField in
             textField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
         }
     }
@@ -214,17 +261,41 @@ class PropertyDetailViewController: UIViewController {
     private func updateROI() {
         let initialInvestment = Double(initialInvestmentTextField.text ?? "0") ?? 0
         let appreciation = Double(appreciationTextField.text ?? "0") ?? 0
-        let rentalIncome = Double(rentalIncomeTextField.text ?? "0") ?? 0
+        let monthlyRent = Double(rentalIncomeTextField.text ?? "0") ?? 0
+        // Convert monthly rent to annual income
+        let rentalIncome = monthlyRent * 12
         let expensePercentage = Double(expensePercentageTextField.text ?? "50") ?? 50.0
         let purchaseYear = Int(purchaseYearTextField.text ?? "") ?? Calendar.current.component(.year, from: Date())
+        let remodelingExpenses = Double(remodelingExpensesTextField.text ?? "0") ?? 0.0
+        let landPercentage = Double(landPercentageTextField.text ?? "20") ?? 20.0
+        let taxRate = Double(taxRateTextField.text ?? "25") ?? 25.0
+        
+        // Total investment includes initial investment and remodeling expenses
+        let totalInvestment = initialInvestment + remodelingExpenses
         
         let roi: Double
-        if initialInvestment > 0 {
+        if totalInvestment > 0 {
             // Subtract expenses from rental income
             let netRentalIncome = rentalIncome * (1 - expensePercentage / 100)
             
-            // Calculate total ROI
-            let totalROI = ((netRentalIncome + appreciation) / initialInvestment) * 100
+            // Calculate depreciation tax benefit
+            // Property value = Initial Investment + Remodeling Expenses
+            let propertyValue = initialInvestment + remodelingExpenses
+            
+            // Land value = Property value × Land percentage
+            let landValue = propertyValue * (landPercentage / 100)
+            
+            // Depreciable value = Property value - Land value
+            let depreciableValue = propertyValue - landValue
+            
+            // Annual depreciation = Depreciable value / 27.5 years (residential)
+            let annualDepreciation = depreciableValue / 27.5
+            
+            // Tax savings = Annual depreciation × Tax rate
+            let taxSavings = annualDepreciation * (taxRate / 100)
+            
+            // Calculate total ROI including tax savings from depreciation
+            let totalROI = ((netRentalIncome + appreciation + taxSavings) / totalInvestment) * 100
             
             // Calculate years since purchase (minimum 1 year)
             let currentYear = Calendar.current.component(.year, from: Date())
@@ -250,15 +321,21 @@ class PropertyDetailViewController: UIViewController {
               let initialInvestment = Double(initialInvestmentText),
               let appreciationText = appreciationTextField.text,
               let appreciation = Double(appreciationText),
-              let rentalIncomeText = rentalIncomeTextField.text,
-              let rentalIncome = Double(rentalIncomeText),
+              let monthlyRentText = rentalIncomeTextField.text,
+              let monthlyRent = Double(monthlyRentText),
               let purchaseYearText = purchaseYearTextField.text,
               let purchaseYear = Int(purchaseYearText) else {
             showError(message: "Please fill in all fields with valid numbers")
             return
         }
         
+        // Convert monthly rent to annual income for storage
+        let rentalIncome = monthlyRent * 12
+        
         let expensePercentage = Double(expensePercentageTextField.text ?? "50") ?? 50.0
+        let remodelingExpenses = Double(remodelingExpensesTextField.text ?? "0") ?? 0.0
+        let landPercentage = Double(landPercentageTextField.text ?? "20") ?? 20.0
+        let taxRate = Double(taxRateTextField.text ?? "25") ?? 25.0
         
         if isEditingMode, let existingProperty = property {
             var updatedProperty = Property(
@@ -268,7 +345,10 @@ class PropertyDetailViewController: UIViewController {
                 appreciation: appreciation,
                 totalRentalIncome: rentalIncome,
                 expensePercentage: expensePercentage,
-                purchaseYear: purchaseYear
+                purchaseYear: purchaseYear,
+                remodelingExpenses: remodelingExpenses,
+                landPercentage: landPercentage,
+                taxRate: taxRate
             )
             PropertyDataManager.shared.updateProperty(updatedProperty)
         } else {
@@ -278,7 +358,10 @@ class PropertyDetailViewController: UIViewController {
                 appreciation: appreciation,
                 totalRentalIncome: rentalIncome,
                 expensePercentage: expensePercentage,
-                purchaseYear: purchaseYear
+                purchaseYear: purchaseYear,
+                remodelingExpenses: remodelingExpenses,
+                landPercentage: landPercentage,
+                taxRate: taxRate
             )
             PropertyDataManager.shared.addProperty(newProperty)
         }

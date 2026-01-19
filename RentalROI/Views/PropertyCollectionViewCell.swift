@@ -39,6 +39,13 @@ class PropertyCollectionViewCell: UICollectionViewCell {
         return label
     }()
     
+    private let totalExpensesLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 14)
+        label.textColor = .secondaryLabel
+        return label
+    }()
+    
     private let roiLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 32)
@@ -96,6 +103,7 @@ class PropertyCollectionViewCell: UICollectionViewCell {
         leftColumnStackView.addArrangedSubview(initialInvestmentLabel)
         leftColumnStackView.addArrangedSubview(appreciationLabel)
         leftColumnStackView.addArrangedSubview(rentalIncomeLabel)
+        leftColumnStackView.addArrangedSubview(totalExpensesLabel)
         
         // Right column: ROI
         rightColumnStackView.addArrangedSubview(roiLabel)
@@ -133,7 +141,15 @@ class PropertyCollectionViewCell: UICollectionViewCell {
         nameLabel.text = property.name
         initialInvestmentLabel.text = "Investment: \(currencyFormatter.string(from: NSNumber(value: property.initialInvestment)) ?? "$0")"
         appreciationLabel.text = "Appreciation: \(currencyFormatter.string(from: NSNumber(value: property.appreciation)) ?? "$0")"
-        rentalIncomeLabel.text = "Rental Income: \(currencyFormatter.string(from: NSNumber(value: property.totalRentalIncome)) ?? "$0")"
+        
+        // Calculate cumulative totals (annual amounts × years since purchase)
+        let currentYear = Calendar.current.component(.year, from: Date())
+        let years = max(1, currentYear - property.purchaseYearValue)
+        let cumulativeRent = property.totalRentalIncome * Double(years)
+        let cumulativeExpenses = property.totalExpenses * Double(years)
+        
+        rentalIncomeLabel.text = "Total Rent: \(currencyFormatter.string(from: NSNumber(value: cumulativeRent)) ?? "$0")"
+        totalExpensesLabel.text = "Total Expenses: \(currencyFormatter.string(from: NSNumber(value: cumulativeExpenses)) ?? "$0")"
         
         let roiValue = property.roi
         roiLabel.text = String(format: "%.1f%%", roiValue)
@@ -146,6 +162,7 @@ class PropertyCollectionViewCell: UICollectionViewCell {
         initialInvestmentLabel.text = nil
         appreciationLabel.text = nil
         rentalIncomeLabel.text = nil
+        totalExpensesLabel.text = nil
         roiLabel.text = nil
     }
 }
