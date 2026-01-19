@@ -65,6 +65,26 @@ class PropertyDetailViewController: UIViewController {
         return textField
     }()
     
+    private let expensePercentageTextField: UITextField = {
+        let textField = UITextField()
+        textField.placeholder = "Expense Percentage (default: 50%)"
+        textField.keyboardType = .decimalPad
+        textField.borderStyle = .roundedRect
+        textField.font = UIFont.systemFont(ofSize: 16)
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        return textField
+    }()
+    
+    private let purchaseYearTextField: UITextField = {
+        let textField = UITextField()
+        textField.placeholder = "Purchase Year"
+        textField.keyboardType = .numberPad
+        textField.borderStyle = .roundedRect
+        textField.font = UIFont.systemFont(ofSize: 16)
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        return textField
+    }()
+    
     private let roiLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 20)
@@ -74,10 +94,19 @@ class PropertyDetailViewController: UIViewController {
         return label
     }()
     
+    // Helper function to create field labels
+    private func createLabel(text: String) -> UILabel {
+        let label = UILabel()
+        label.text = text
+        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.textColor = .label
+        return label
+    }
+    
     private let stackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = 16
+        stack.spacing = 8
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }()
@@ -118,10 +147,25 @@ class PropertyDetailViewController: UIViewController {
         scrollView.addSubview(contentView)
         contentView.addSubview(stackView)
         
+        // Add labels and fields
+        stackView.addArrangedSubview(createLabel(text: "Property Name/Address"))
         stackView.addArrangedSubview(nameTextField)
+        
+        stackView.addArrangedSubview(createLabel(text: "Initial Investment"))
         stackView.addArrangedSubview(initialInvestmentTextField)
+        
+        stackView.addArrangedSubview(createLabel(text: "Appreciation"))
         stackView.addArrangedSubview(appreciationTextField)
+        
+        stackView.addArrangedSubview(createLabel(text: "Total Rental Income"))
         stackView.addArrangedSubview(rentalIncomeTextField)
+        
+        stackView.addArrangedSubview(createLabel(text: "Expense Percentage (%)"))
+        stackView.addArrangedSubview(expensePercentageTextField)
+        
+        stackView.addArrangedSubview(createLabel(text: "Purchase Year"))
+        stackView.addArrangedSubview(purchaseYearTextField)
+        
         stackView.addArrangedSubview(roiLabel)
         
         NSLayoutConstraint.activate([
@@ -147,11 +191,18 @@ class PropertyDetailViewController: UIViewController {
             initialInvestmentTextField.text = String(format: "%.2f", property.initialInvestment)
             appreciationTextField.text = String(format: "%.2f", property.appreciation)
             rentalIncomeTextField.text = String(format: "%.2f", property.totalRentalIncome)
+            expensePercentageTextField.text = String(format: "%.1f", property.expensePercentageValue)
+            purchaseYearTextField.text = String(property.purchaseYearValue)
+        } else {
+            // Set defaults for new property
+            expensePercentageTextField.text = "50.0"
+            let currentYear = Calendar.current.component(.year, from: Date())
+            purchaseYearTextField.text = String(currentYear)
         }
     }
     
     private func setupTextFields() {
-        [initialInvestmentTextField, appreciationTextField, rentalIncomeTextField].forEach { textField in
+        [initialInvestmentTextField, appreciationTextField, rentalIncomeTextField, expensePercentageTextField, purchaseYearTextField].forEach { textField in
             textField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
         }
     }
@@ -164,15 +215,28 @@ class PropertyDetailViewController: UIViewController {
         let initialInvestment = Double(initialInvestmentTextField.text ?? "0") ?? 0
         let appreciation = Double(appreciationTextField.text ?? "0") ?? 0
         let rentalIncome = Double(rentalIncomeTextField.text ?? "0") ?? 0
+        let expensePercentage = Double(expensePercentageTextField.text ?? "50") ?? 50.0
+        let purchaseYear = Int(purchaseYearTextField.text ?? "") ?? Calendar.current.component(.year, from: Date())
         
         let roi: Double
         if initialInvestment > 0 {
-            roi = ((rentalIncome + appreciation) / initialInvestment) * 100
+            // Subtract expenses from rental income
+            let netRentalIncome = rentalIncome * (1 - expensePercentage / 100)
+            
+            // Calculate total ROI
+            let totalROI = ((netRentalIncome + appreciation) / initialInvestment) * 100
+            
+            // Calculate years since purchase (minimum 1 year)
+            let currentYear = Calendar.current.component(.year, from: Date())
+            let years = max(1, currentYear - purchaseYear)
+            
+            // Calculate average annual ROI
+            roi = totalROI / Double(years)
         } else {
             roi = 0
         }
         
-        roiLabel.text = String(format: "ROI: %.1f%%", roi)
+        roiLabel.text = String(format: "Annual ROI: %.1f%%", roi)
         roiLabel.textColor = roi >= 0 ? .systemGreen : .systemRed
     }
     
@@ -187,18 +251,24 @@ class PropertyDetailViewController: UIViewController {
               let appreciationText = appreciationTextField.text,
               let appreciation = Double(appreciationText),
               let rentalIncomeText = rentalIncomeTextField.text,
-              let rentalIncome = Double(rentalIncomeText) else {
+              let rentalIncome = Double(rentalIncomeText),
+              let purchaseYearText = purchaseYearTextField.text,
+              let purchaseYear = Int(purchaseYearText) else {
             showError(message: "Please fill in all fields with valid numbers")
             return
         }
         
+        let expensePercentage = Double(expensePercentageTextField.text ?? "50") ?? 50.0
+        
         if isEditingMode, let existingProperty = property {
-            let updatedProperty = Property(
+            var updatedProperty = Property(
                 id: existingProperty.id,
                 name: name,
                 initialInvestment: initialInvestment,
                 appreciation: appreciation,
-                totalRentalIncome: rentalIncome
+                totalRentalIncome: rentalIncome,
+                expensePercentage: expensePercentage,
+                purchaseYear: purchaseYear
             )
             PropertyDataManager.shared.updateProperty(updatedProperty)
         } else {
@@ -206,7 +276,9 @@ class PropertyDetailViewController: UIViewController {
                 name: name,
                 initialInvestment: initialInvestment,
                 appreciation: appreciation,
-                totalRentalIncome: rentalIncome
+                totalRentalIncome: rentalIncome,
+                expensePercentage: expensePercentage,
+                purchaseYear: purchaseYear
             )
             PropertyDataManager.shared.addProperty(newProperty)
         }

@@ -112,10 +112,10 @@ class PropertyCollectionViewCell: UICollectionViewCell {
         rightColumnStackView.setContentCompressionResistancePriority(.required, for: .horizontal)
         
         NSLayoutConstraint.activate([
-            mainStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+            mainStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
             mainStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             mainStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            mainStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12)
+            mainStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10)
         ])
     }
     
