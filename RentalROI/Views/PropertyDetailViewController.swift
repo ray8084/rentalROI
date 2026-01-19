@@ -154,7 +154,17 @@ class PropertyDetailViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupTextFields()
+        setupKeyboardObservers()
         updateROI()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        removeKeyboardObservers()
+    }
+    
+    deinit {
+        removeKeyboardObservers()
     }
     
     private func setupUI() {
@@ -251,6 +261,78 @@ class PropertyDetailViewController: UIViewController {
     private func setupTextFields() {
         [initialInvestmentTextField, appreciationTextField, rentalIncomeTextField, expensePercentageTextField, purchaseYearTextField, remodelingExpensesTextField, landPercentageTextField, taxRateTextField].forEach { textField in
             textField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+            textField.delegate = self
+        }
+    }
+    
+    private func setupKeyboardObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillShow(_:)),
+            name: UIResponder.keyboardWillShowNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillHide(_:)),
+            name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
+    }
+    
+    private func removeKeyboardObservers() {
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+    
+    @objc private func keyboardWillShow(_ notification: Notification) {
+        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
+              let animationDuration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else {
+            return
+        }
+        
+        let keyboardHeight = keyboardFrame.height
+        let contentInsets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
+        
+        UIView.animate(withDuration: animationDuration) {
+            self.scrollView.contentInset = contentInsets
+            self.scrollView.scrollIndicatorInsets = contentInsets
+        }
+        
+        // Scroll to active text field if needed
+        if let activeTextField = findFirstResponder() {
+            scrollToTextField(activeTextField)
+        }
+    }
+    
+    @objc private func keyboardWillHide(_ notification: Notification) {
+        guard let animationDuration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else {
+            return
+        }
+        
+        UIView.animate(withDuration: animationDuration) {
+            self.scrollView.contentInset = .zero
+            self.scrollView.scrollIndicatorInsets = .zero
+        }
+    }
+    
+    private func findFirstResponder() -> UITextField? {
+        let textFields = [nameTextField, initialInvestmentTextField, appreciationTextField, rentalIncomeTextField, expensePercentageTextField, purchaseYearTextField, remodelingExpensesTextField, landPercentageTextField, taxRateTextField]
+        return textFields.first { $0.isFirstResponder }
+    }
+    
+    private func scrollToTextField(_ textField: UITextField) {
+        let textFieldFrame = textField.convert(textField.bounds, to: scrollView)
+        let scrollViewFrame = scrollView.bounds
+        let adjustedFrame = CGRect(
+            x: textFieldFrame.origin.x,
+            y: textFieldFrame.origin.y - 20,
+            width: textFieldFrame.width,
+            height: textFieldFrame.height + 40
+        )
+        
+        if !scrollViewFrame.contains(adjustedFrame) {
+            scrollView.scrollRectToVisible(adjustedFrame, animated: true)
         }
     }
     
@@ -374,5 +456,11 @@ class PropertyDetailViewController: UIViewController {
         let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
+    }
+}
+
+extension PropertyDetailViewController: UITextFieldDelegate {
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        scrollToTextField(textField)
     }
 }

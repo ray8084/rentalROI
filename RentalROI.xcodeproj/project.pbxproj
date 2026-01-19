@@ -7,25 +7,25 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		40376F35 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823EDB66 /* AppDelegate.swift */; };
-		865B7984 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E27F4BE5 /* SceneDelegate.swift */; };
-		6333F1C7 /* Property.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CA537D1 /* Property.swift */; };
-		F4EA7EE6 /* PropertyDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C64387C /* PropertyDataManager.swift */; };
 		2C68EB90 /* PropertyListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E18E6EB /* PropertyListViewController.swift */; };
 		2C97CFDA /* PropertyCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4415625 /* PropertyCollectionViewCell.swift */; };
+		40376F35 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823EDB66 /* AppDelegate.swift */; };
+		6333F1C7 /* Property.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CA537D1 /* Property.swift */; };
 		75D6F9BA /* PropertyDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59786DEE /* PropertyDetailViewController.swift */; };
+		865B7984 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E27F4BE5 /* SceneDelegate.swift */; };
+		F4EA7EE6 /* PropertyDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C64387C /* PropertyDataManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		823EDB66 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		E27F4BE5 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		1CA537D1 /* Property.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Property.swift; sourceTree = "<group>"; };
 		2C64387C /* PropertyDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyDataManager.swift; sourceTree = "<group>"; };
 		3E18E6EB /* PropertyListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyListViewController.swift; sourceTree = "<group>"; };
-		A4415625 /* PropertyCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyCollectionViewCell.swift; sourceTree = "<group>"; };
-		59786DEE /* PropertyDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyDetailViewController.swift; sourceTree = "<group>"; };
 		40229083 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		59786DEE /* PropertyDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyDetailViewController.swift; sourceTree = "<group>"; };
+		823EDB66 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A4415625 /* PropertyCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyCollectionViewCell.swift; sourceTree = "<group>"; };
 		C301E7BB /* RentalROI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RentalROI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E27F4BE5 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -39,12 +39,12 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		78AF58D6 = {
+		0D787E89 /* Supporting */ = {
 			isa = PBXGroup;
 			children = (
-				A558A42A /* RentalROI */,
-				685050D3 /* Products */,
+				40229083 /* Info.plist */,
 			);
+			path = Supporting;
 			sourceTree = "<group>";
 		};
 		685050D3 /* Products */ = {
@@ -53,6 +53,40 @@
 				C301E7BB /* RentalROI.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		78AF58D6 = {
+			isa = PBXGroup;
+			children = (
+				A558A42A /* RentalROI */,
+				685050D3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		7AB2D147 /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+				2C64387C /* PropertyDataManager.swift */,
+			);
+			path = Managers;
+			sourceTree = "<group>";
+		};
+		938D93E0 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				1CA537D1 /* Property.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A35B5330 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				3E18E6EB /* PropertyListViewController.swift */,
+				A4415625 /* PropertyCollectionViewCell.swift */,
+				59786DEE /* PropertyDetailViewController.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 		A558A42A /* RentalROI */ = {
@@ -66,40 +100,6 @@
 				E27F4BE5 /* SceneDelegate.swift */,
 			);
 			path = RentalROI;
-			sourceTree = "<group>";
-		};
-		938D93E0 /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				1CA537D1 /* Property.swift */,
-			);
-			path = Models;
-			sourceTree = "<group>";
-		};
-		7AB2D147 /* Managers */ = {
-			isa = PBXGroup;
-			children = (
-				2C64387C /* PropertyDataManager.swift */,
-			);
-			path = Managers;
-			sourceTree = "<group>";
-		};
-		A35B5330 /* Views */ = {
-			isa = PBXGroup;
-			children = (
-				3E18E6EB /* PropertyListViewController.swift */,
-				A4415625 /* PropertyCollectionViewCell.swift */,
-				59786DEE /* PropertyDetailViewController.swift */,
-			);
-			path = Views;
-			sourceTree = "<group>";
-		};
-		0D787E89 /* Supporting */ = {
-			isa = PBXGroup;
-			children = (
-				40229083 /* Info.plist */,
-			);
-			path = Supporting;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -309,7 +309,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 26UUUMB93E;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = RentalROI/Supporting/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -338,7 +338,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 26UUUMB93E;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = RentalROI/Supporting/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
