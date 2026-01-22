@@ -21,3 +21,7 @@ This is an iOS rental property ROI tracking application built with UIKit.
 - Use UIKit patterns and best practices
 - Maintain MVC architecture
 - Ensure data persistence works correctly with UserDefaults
+
+## Git Workflow
+
+- Always push to the remote repository immediately after committing changes
