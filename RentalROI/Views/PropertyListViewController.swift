@@ -34,6 +34,12 @@ class PropertyListViewController: UIViewController {
             action: #selector(addPropertyTapped)
         )
         
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .action,
+            target: self,
+            action: #selector(shareProperties)
+        )
+        
         // Setup collection view layout
         let layout = UICollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 16
@@ -76,6 +82,73 @@ class PropertyListViewController: UIViewController {
         }
         let navController = UINavigationController(rootViewController: detailVC)
         present(navController, animated: true)
+    }
+    
+    @objc private func shareProperties() {
+        // Check if there are properties to share
+        guard !properties.isEmpty else {
+            let alert = UIAlertController(
+                title: "No Properties",
+                message: "There are no properties to share.",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
+        }
+        
+        // Get JSON data
+        guard let jsonData = dataManager.exportPropertiesAsJSON() else {
+            let alert = UIAlertController(
+                title: "Export Error",
+                message: "Failed to export properties data.",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
+        }
+        
+        // Create temporary file
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let dateString = dateFormatter.string(from: Date())
+        let fileName = "rental-properties-\(dateString).json"
+        
+        let tempDirectory = FileManager.default.temporaryDirectory
+        let fileURL = tempDirectory.appendingPathComponent(fileName)
+        
+        // Write JSON data to file
+        do {
+            try jsonData.write(to: fileURL)
+        } catch {
+            let alert = UIAlertController(
+                title: "Export Error",
+                message: "Failed to create export file: \(error.localizedDescription)",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
+        }
+        
+        // Create and present share sheet
+        let activityViewController = UIActivityViewController(
+            activityItems: [fileURL],
+            applicationActivities: nil
+        )
+        
+        // For iPad support
+        if let popover = activityViewController.popoverPresentationController {
+            popover.barButtonItem = navigationItem.leftBarButtonItem
+        }
+        
+        // Clean up temporary file after sharing completes
+        activityViewController.completionWithItemsHandler = { _, _, _, _ in
+            try? FileManager.default.removeItem(at: fileURL)
+        }
+        
+        present(activityViewController, animated: true)
     }
 }
 

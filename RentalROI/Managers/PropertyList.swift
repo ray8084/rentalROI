@@ -45,4 +45,9 @@ class PropertyList {
         properties.removeAll(where: { $0.id == id })
         saveProperties(properties)
     }
+    
+    func exportPropertiesAsJSON() -> Data? {
+        let properties = loadProperties()
+        return try? JSONEncoder().encode(properties)
+    }
 }
