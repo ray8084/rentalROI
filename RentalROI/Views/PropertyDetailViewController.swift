@@ -146,6 +146,24 @@ class PropertyDetailViewController: UIViewController {
         return label
     }
     
+    // Helper function to create a horizontal row with label and text field
+    private func createFieldRow(labelText: String, textField: UITextField) -> UIStackView {
+        let label = createLabel(text: labelText)
+        label.setContentHuggingPriority(.required, for: .horizontal)
+        label.setContentCompressionResistancePriority(.required, for: .horizontal)
+        
+        let rowStack = UIStackView(arrangedSubviews: [label, textField])
+        rowStack.axis = .horizontal
+        rowStack.spacing = 12
+        rowStack.alignment = .center
+        rowStack.distribution = .fill
+        
+        // Set label width constraint for alignment
+        label.widthAnchor.constraint(equalToConstant: 180).isActive = true
+        
+        return rowStack
+    }
+    
     private let stackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
@@ -201,33 +219,24 @@ class PropertyDetailViewController: UIViewController {
         scrollView.addSubview(contentView)
         contentView.addSubview(stackView)
         
-        // Add labels and fields
-        stackView.addArrangedSubview(createLabel(text: "Property Name/Address"))
-        stackView.addArrangedSubview(nameTextField)
+        // Add labels and fields in horizontal rows
+        stackView.addArrangedSubview(createFieldRow(labelText: "Property Name/Address", textField: nameTextField))
         
-        stackView.addArrangedSubview(createLabel(text: "Initial Investment"))
-        stackView.addArrangedSubview(initialInvestmentTextField)
+        stackView.addArrangedSubview(createFieldRow(labelText: "Initial Investment", textField: initialInvestmentTextField))
         
-        stackView.addArrangedSubview(createLabel(text: "Appreciation"))
-        stackView.addArrangedSubview(appreciationTextField)
+        stackView.addArrangedSubview(createFieldRow(labelText: "Appreciation", textField: appreciationTextField))
         
-        stackView.addArrangedSubview(createLabel(text: "Average Monthly Rent"))
-        stackView.addArrangedSubview(rentalIncomeTextField)
+        stackView.addArrangedSubview(createFieldRow(labelText: "Average Monthly Rent", textField: rentalIncomeTextField))
         
-        stackView.addArrangedSubview(createLabel(text: "Operating Expense Percentage (%)"))
-        stackView.addArrangedSubview(expensePercentageTextField)
+        stackView.addArrangedSubview(createFieldRow(labelText: "Operating Expense %", textField: expensePercentageTextField))
         
-        stackView.addArrangedSubview(createLabel(text: "Purchase Year"))
-        stackView.addArrangedSubview(purchaseYearTextField)
+        stackView.addArrangedSubview(createFieldRow(labelText: "Purchase Year", textField: purchaseYearTextField))
         
-        stackView.addArrangedSubview(createLabel(text: "Remodeling Expenses"))
-        stackView.addArrangedSubview(remodelingExpensesTextField)
+        stackView.addArrangedSubview(createFieldRow(labelText: "Remodeling Expenses", textField: remodelingExpensesTextField))
         
-        stackView.addArrangedSubview(createLabel(text: "Land Percentage (%)"))
-        stackView.addArrangedSubview(landPercentageTextField)
+        stackView.addArrangedSubview(createFieldRow(labelText: "Land Percentage %", textField: landPercentageTextField))
         
-        stackView.addArrangedSubview(createLabel(text: "Tax Rate (%)"))
-        stackView.addArrangedSubview(taxRateTextField)
+        stackView.addArrangedSubview(createFieldRow(labelText: "Tax Rate %", textField: taxRateTextField))
         
         stackView.addArrangedSubview(roiLabel)
         
