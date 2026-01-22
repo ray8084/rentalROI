@@ -164,6 +164,27 @@ class PropertyDetailViewController: UIViewController {
         return rowStack
     }
     
+    // Helper function to format numbers with commas
+    private func formatNumber(_ value: Double, decimalPlaces: Int = 2) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = decimalPlaces
+        formatter.minimumFractionDigits = decimalPlaces
+        return formatter.string(from: NSNumber(value: value)) ?? String(format: "%.\(decimalPlaces)f", value)
+    }
+    
+    // Helper function to parse numbers, removing commas
+    private func parseNumber(_ text: String) -> Double? {
+        let cleanedText = text.replacingOccurrences(of: ",", with: "")
+        return Double(cleanedText)
+    }
+    
+    // Helper function to parse integers, removing commas
+    private func parseInteger(_ text: String) -> Int? {
+        let cleanedText = text.replacingOccurrences(of: ",", with: "")
+        return Int(cleanedText)
+    }
+    
     private let stackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
@@ -268,15 +289,15 @@ class PropertyDetailViewController: UIViewController {
         
         if let property = property {
             nameTextField.text = property.name
-            initialInvestmentTextField.text = String(format: "%.2f", property.initialInvestment)
-            appreciationTextField.text = String(format: "%.2f", property.appreciation)
+            initialInvestmentTextField.text = formatNumber(property.initialInvestment)
+            appreciationTextField.text = formatNumber(property.appreciation)
             // Convert annual income to monthly rent for display
-            rentalIncomeTextField.text = String(format: "%.2f", property.totalRentalIncome / 12)
-            expensePercentageTextField.text = String(format: "%.1f", property.expensePercentageValue)
+            rentalIncomeTextField.text = formatNumber(property.totalRentalIncome / 12)
+            expensePercentageTextField.text = formatNumber(property.expensePercentageValue, decimalPlaces: 1)
             purchaseYearTextField.text = String(property.purchaseYearValue)
-            remodelingExpensesTextField.text = String(format: "%.2f", property.remodelingExpensesValue)
-            landPercentageTextField.text = String(format: "%.1f", property.landPercentageValue)
-            taxRateTextField.text = String(format: "%.1f", property.taxRateValue)
+            remodelingExpensesTextField.text = formatNumber(property.remodelingExpensesValue)
+            landPercentageTextField.text = formatNumber(property.landPercentageValue, decimalPlaces: 1)
+            taxRateTextField.text = formatNumber(property.taxRateValue, decimalPlaces: 1)
         } else {
             // Set defaults for new property
             expensePercentageTextField.text = "50.0"
@@ -372,16 +393,16 @@ class PropertyDetailViewController: UIViewController {
     }
     
     private func updateROI() {
-        let initialInvestment = Double(initialInvestmentTextField.text ?? "0") ?? 0
-        let appreciation = Double(appreciationTextField.text ?? "0") ?? 0
-        let monthlyRent = Double(rentalIncomeTextField.text ?? "0") ?? 0
+        let initialInvestment = parseNumber(initialInvestmentTextField.text ?? "0") ?? 0
+        let appreciation = parseNumber(appreciationTextField.text ?? "0") ?? 0
+        let monthlyRent = parseNumber(rentalIncomeTextField.text ?? "0") ?? 0
         // Convert monthly rent to annual income
         let rentalIncome = monthlyRent * 12
-        let expensePercentage = Double(expensePercentageTextField.text ?? "50") ?? 50.0
-        let purchaseYear = Int(purchaseYearTextField.text ?? "") ?? Calendar.current.component(.year, from: Date())
-        let remodelingExpenses = Double(remodelingExpensesTextField.text ?? "0") ?? 0.0
-        let landPercentage = Double(landPercentageTextField.text ?? "20") ?? 20.0
-        let taxRate = Double(taxRateTextField.text ?? "25") ?? 25.0
+        let expensePercentage = parseNumber(expensePercentageTextField.text ?? "50") ?? 50.0
+        let purchaseYear = parseInteger(purchaseYearTextField.text ?? "") ?? Calendar.current.component(.year, from: Date())
+        let remodelingExpenses = parseNumber(remodelingExpensesTextField.text ?? "0") ?? 0.0
+        let landPercentage = parseNumber(landPercentageTextField.text ?? "20") ?? 20.0
+        let taxRate = parseNumber(taxRateTextField.text ?? "25") ?? 25.0
         
         // Total investment includes initial investment and remodeling expenses
         let totalInvestment = initialInvestment + remodelingExpenses
@@ -431,13 +452,13 @@ class PropertyDetailViewController: UIViewController {
     @objc private func saveTapped() {
         guard let name = nameTextField.text, !name.isEmpty,
               let initialInvestmentText = initialInvestmentTextField.text,
-              let initialInvestment = Double(initialInvestmentText),
+              let initialInvestment = parseNumber(initialInvestmentText),
               let appreciationText = appreciationTextField.text,
-              let appreciation = Double(appreciationText),
+              let appreciation = parseNumber(appreciationText),
               let monthlyRentText = rentalIncomeTextField.text,
-              let monthlyRent = Double(monthlyRentText),
+              let monthlyRent = parseNumber(monthlyRentText),
               let purchaseYearText = purchaseYearTextField.text,
-              let purchaseYear = Int(purchaseYearText) else {
+              let purchaseYear = parseInteger(purchaseYearText) else {
             showError(message: "Please fill in all fields with valid numbers")
             return
         }
@@ -445,10 +466,10 @@ class PropertyDetailViewController: UIViewController {
         // Convert monthly rent to annual income for storage
         let rentalIncome = monthlyRent * 12
         
-        let expensePercentage = Double(expensePercentageTextField.text ?? "50") ?? 50.0
-        let remodelingExpenses = Double(remodelingExpensesTextField.text ?? "0") ?? 0.0
-        let landPercentage = Double(landPercentageTextField.text ?? "20") ?? 20.0
-        let taxRate = Double(taxRateTextField.text ?? "25") ?? 25.0
+        let expensePercentage = parseNumber(expensePercentageTextField.text ?? "50") ?? 50.0
+        let remodelingExpenses = parseNumber(remodelingExpensesTextField.text ?? "0") ?? 0.0
+        let landPercentage = parseNumber(landPercentageTextField.text ?? "20") ?? 20.0
+        let taxRate = parseNumber(taxRateTextField.text ?? "25") ?? 25.0
         
         if isEditingMode, let existingProperty = property {
             var updatedProperty = Property(
@@ -513,5 +534,24 @@ class PropertyDetailViewController: UIViewController {
 extension PropertyDetailViewController: UITextFieldDelegate {
     func textFieldDidBeginEditing(_ textField: UITextField) {
         scrollToTextField(textField)
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        // Format numbers with commas when editing ends
+        if textField == initialInvestmentTextField || 
+           textField == appreciationTextField || 
+           textField == rentalIncomeTextField || 
+           textField == remodelingExpensesTextField {
+            if let text = textField.text, let value = parseNumber(text) {
+                textField.text = formatNumber(value)
+            }
+        } else if textField == expensePercentageTextField || 
+                  textField == landPercentageTextField || 
+                  textField == taxRateTextField {
+            if let text = textField.text, let value = parseNumber(text) {
+                textField.text = formatNumber(value, decimalPlaces: 1)
+            }
+        }
+        updateROI()
     }
 }
