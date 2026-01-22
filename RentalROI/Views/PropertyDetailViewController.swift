@@ -125,6 +125,18 @@ class PropertyDetailViewController: UIViewController {
         return label
     }()
     
+    private let deleteButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("Delete Property", for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = .systemRed
+        button.layer.cornerRadius = 8
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(deleteTapped), for: .touchUpInside)
+        return button
+    }()
+    
     // Helper function to create field labels
     private func createLabel(text: String) -> UILabel {
         let label = UILabel()
@@ -218,6 +230,14 @@ class PropertyDetailViewController: UIViewController {
         stackView.addArrangedSubview(taxRateTextField)
         
         stackView.addArrangedSubview(roiLabel)
+        
+        // Add delete button only when editing an existing property
+        if isEditingMode {
+            stackView.addArrangedSubview(deleteButton)
+            NSLayoutConstraint.activate([
+                deleteButton.heightAnchor.constraint(equalToConstant: 50)
+            ])
+        }
         
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -452,6 +472,26 @@ class PropertyDetailViewController: UIViewController {
         
         completionHandler?()
         dismiss(animated: true)
+    }
+    
+    @objc private func deleteTapped() {
+        guard let property = property else { return }
+        
+        let alert = UIAlertController(
+            title: "Delete Property",
+            message: "Are you sure you want to delete \(property.name)? This action cannot be undone.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            guard let self = self, let property = self.property else { return }
+            self.dataManager.deleteProperty(withId: property.id)
+            self.completionHandler?()
+            self.dismiss(animated: true)
+        })
+        
+        present(alert, animated: true)
     }
     
     private func showError(message: String) {
