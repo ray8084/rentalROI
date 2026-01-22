@@ -8,10 +8,9 @@
 import Foundation
 
 class PropertyDataManager {
-    static let shared = PropertyDataManager()
     private let propertiesKey = "SavedProperties"
     
-    private init() {}
+    init() {}
     
     func saveProperties(_ properties: [Property]) {
         if let encoded = try? JSONEncoder().encode(properties) {

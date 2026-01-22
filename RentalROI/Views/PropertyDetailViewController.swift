@@ -10,6 +10,7 @@ import UIKit
 class PropertyDetailViewController: UIViewController {
     var completionHandler: (() -> Void)?
     private var property: Property?
+    private let dataManager: PropertyDataManager
     private var isEditingMode: Bool {
         return property != nil
     }
@@ -141,8 +142,9 @@ class PropertyDetailViewController: UIViewController {
         return stack
     }()
     
-    init(property: Property? = nil) {
+    init(property: Property? = nil, dataManager: PropertyDataManager) {
         self.property = property
+        self.dataManager = dataManager
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -432,7 +434,7 @@ class PropertyDetailViewController: UIViewController {
                 landPercentage: landPercentage,
                 taxRate: taxRate
             )
-            PropertyDataManager.shared.updateProperty(updatedProperty)
+            dataManager.updateProperty(updatedProperty)
         } else {
             let newProperty = Property(
                 name: name,
@@ -445,7 +447,7 @@ class PropertyDetailViewController: UIViewController {
                 landPercentage: landPercentage,
                 taxRate: taxRate
             )
-            PropertyDataManager.shared.addProperty(newProperty)
+            dataManager.addProperty(newProperty)
         }
         
         completionHandler?()

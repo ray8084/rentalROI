@@ -10,6 +10,7 @@ import UIKit
 class PropertyListViewController: UIViewController {
     private var collectionView: UICollectionView!
     private var properties: [Property] = []
+    private let dataManager = PropertyDataManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -64,12 +65,12 @@ class PropertyListViewController: UIViewController {
     }
     
     private func loadProperties() {
-        properties = PropertyDataManager.shared.loadProperties()
+        properties = dataManager.loadProperties()
         collectionView.reloadData()
     }
     
     @objc private func addPropertyTapped() {
-        let detailVC = PropertyDetailViewController()
+        let detailVC = PropertyDetailViewController(dataManager: dataManager)
         detailVC.completionHandler = { [weak self] in
             self?.loadProperties()
         }
@@ -94,7 +95,7 @@ extension PropertyListViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         collectionView.deselectItem(at: indexPath, animated: true)
         let property = properties[indexPath.item]
-        let detailVC = PropertyDetailViewController(property: property)
+        let detailVC = PropertyDetailViewController(property: property, dataManager: dataManager)
         detailVC.completionHandler = { [weak self] in
             self?.loadProperties()
         }
@@ -122,7 +123,7 @@ extension PropertyListViewController: UICollectionViewDelegate {
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
-            PropertyDataManager.shared.deleteProperty(withId: property.id)
+            self?.dataManager.deleteProperty(withId: property.id)
             self?.loadProperties()
         })
         
