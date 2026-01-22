@@ -12,7 +12,7 @@ This is an iOS rental property ROI tracking application built with UIKit.
 ## Key Components
 
 - **Models**: `Property.swift` - Core data model for rental properties
-- **Managers**: `PropertyDataManager.swift` - Handles data persistence with UserDefaults
+- **Managers**: `PropertyList.swift` - Handles data persistence with UserDefaults
 - **Views**: Collection view-based UI for displaying and managing properties
 
 ## Development Guidelines

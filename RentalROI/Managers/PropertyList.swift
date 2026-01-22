@@ -1,5 +1,5 @@
 //
-//  PropertyDataManager.swift
+//  PropertyList.swift
 //  RentalROI
 //
 //  Created on $(date).
@@ -7,7 +7,7 @@
 
 import Foundation
 
-class PropertyDataManager {
+class PropertyList {
     private let propertiesKey = "SavedProperties"
     
     init() {}

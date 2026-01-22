@@ -45,7 +45,7 @@ RentalROI/
 ├── Models/
 │   └── Property.swift
 ├── Managers/
-│   └── PropertyDataManager.swift
+│   └── PropertyList.swift
 └── Views/
     ├── PropertyListViewController.swift
     ├── PropertyCollectionViewCell.swift

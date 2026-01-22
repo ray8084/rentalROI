@@ -10,7 +10,7 @@ import UIKit
 class PropertyDetailViewController: UIViewController {
     var completionHandler: (() -> Void)?
     private var property: Property?
-    private let dataManager: PropertyDataManager
+    private let dataManager: PropertyList
     private var isEditingMode: Bool {
         return property != nil
     }
@@ -142,7 +142,7 @@ class PropertyDetailViewController: UIViewController {
         return stack
     }()
     
-    init(property: Property? = nil, dataManager: PropertyDataManager) {
+    init(property: Property? = nil, dataManager: PropertyList) {
         self.property = property
         self.dataManager = dataManager
         super.init(nibName: nil, bundle: nil)

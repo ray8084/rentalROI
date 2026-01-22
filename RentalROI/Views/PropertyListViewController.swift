@@ -10,7 +10,7 @@ import UIKit
 class PropertyListViewController: UIViewController {
     private var collectionView: UICollectionView!
     private var properties: [Property] = []
-    private let dataManager = PropertyDataManager()
+    private let dataManager = PropertyList()
     
     override func viewDidLoad() {
         super.viewDidLoad()

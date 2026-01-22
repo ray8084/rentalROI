@@ -13,12 +13,12 @@
 		6333F1C7 /* Property.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CA537D1 /* Property.swift */; };
 		75D6F9BA /* PropertyDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59786DEE /* PropertyDetailViewController.swift */; };
 		865B7984 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E27F4BE5 /* SceneDelegate.swift */; };
-		F4EA7EE6 /* PropertyDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C64387C /* PropertyDataManager.swift */; };
+		F4EA7EE6 /* PropertyList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C64387C /* PropertyList.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		1CA537D1 /* Property.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Property.swift; sourceTree = "<group>"; };
-		2C64387C /* PropertyDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyDataManager.swift; sourceTree = "<group>"; };
+		2C64387C /* PropertyList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyList.swift; sourceTree = "<group>"; };
 		3E18E6EB /* PropertyListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyListViewController.swift; sourceTree = "<group>"; };
 		40229083 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		59786DEE /* PropertyDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyDetailViewController.swift; sourceTree = "<group>"; };
@@ -66,7 +66,7 @@
 		7AB2D147 /* Managers */ = {
 			isa = PBXGroup;
 			children = (
-				2C64387C /* PropertyDataManager.swift */,
+				2C64387C /* PropertyList.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -173,7 +173,7 @@
 				40376F35 /* AppDelegate.swift in Sources */,
 				865B7984 /* SceneDelegate.swift in Sources */,
 				6333F1C7 /* Property.swift in Sources */,
-				F4EA7EE6 /* PropertyDataManager.swift in Sources */,
+				F4EA7EE6 /* PropertyList.swift in Sources */,
 				2C68EB90 /* PropertyListViewController.swift in Sources */,
 				2C97CFDA /* PropertyCollectionViewCell.swift in Sources */,
 				75D6F9BA /* PropertyDetailViewController.swift in Sources */,
