@@ -24,7 +24,7 @@ class PropertyListViewController: UIViewController {
     }
     
     private func setupUI() {
-        title = "Rentals"
+        title = "Real ROI"
         view.backgroundColor = .systemGroupedBackground
         
         // Setup navigation bar

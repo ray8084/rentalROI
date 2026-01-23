@@ -442,7 +442,8 @@ class PropertyDetailViewController: UIViewController {
         }
         
         roiLabel.text = String(format: "Annual ROI: %.1f%%", roi)
-        roiLabel.textColor = roi >= 0 ? .systemGreen : .systemRed
+        let appGreen = UIColor(red: 120/255.0, green: 180/255.0, blue: 60/255.0, alpha: 1.0)
+        roiLabel.textColor = roi >= 0 ? appGreen : .systemRed
     }
     
     @objc private func cancelTapped() {

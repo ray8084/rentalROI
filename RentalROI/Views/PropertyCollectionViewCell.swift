@@ -153,7 +153,8 @@ class PropertyCollectionViewCell: UICollectionViewCell {
         
         let roiValue = property.roi
         roiLabel.text = String(format: "%.1f%%", roiValue)
-        roiLabel.textColor = roiValue >= 0 ? .systemGreen : .systemRed
+        let appGreen = UIColor(red: 120/255.0, green: 180/255.0, blue: 60/255.0, alpha: 1.0)
+        roiLabel.textColor = roiValue >= 0 ? appGreen : .systemRed
     }
     
     override func prepareForReuse() {
