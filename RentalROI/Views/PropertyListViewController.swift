@@ -328,11 +328,9 @@ extension PropertyListViewController: UIDocumentPickerDelegate {
                     // Show toast notification
                     self.showToast(message: "Imported \(propertyCount) propert\(propertyCount == 1 ? "y" : "ies")")
                     
-                    // Show results after a brief delay
+                    // Dismiss progress view after a brief delay
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                        progressVC.dismiss(animated: true) {
-                            self.showImportResults(propertyCount: propertyCount, fileName: fileName)
-                        }
+                        progressVC.dismiss(animated: true)
                     }
                 }
                 
@@ -397,13 +395,6 @@ extension PropertyListViewController: UIDocumentPickerDelegate {
             message: "Successfully imported \(propertyCount) propert\(propertyCount == 1 ? "y" : "ies") from \(fileName).",
             preferredStyle: .alert
         )
-        
-        // Add undo option if backup exists
-        if importBackup != nil {
-            alert.addAction(UIAlertAction(title: "Undo Import", style: .destructive) { [weak self] _ in
-                self?.undoLastImport()
-            })
-        }
         
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
