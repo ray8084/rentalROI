@@ -189,33 +189,121 @@ extension PropertyListViewController: UIDocumentPickerDelegate {
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
         guard let url = urls.first else { return }
         
-        // Check if we have access to the file
-        guard url.startAccessingSecurityScopedResource() else {
-            showImportError(message: "Unable to access the selected file.")
-            return
-        }
-        defer { url.stopAccessingSecurityScopedResource() }
+        let fileName = url.lastPathComponent
         
-        // Read the file data
-        do {
-            let data = try Data(contentsOf: url)
+        // Show loading indicator
+        let loadingAlert = UIAlertController(title: nil, message: "Importing \(fileName)...", preferredStyle: .alert)
+        let loadingIndicator = UIActivityIndicatorView(style: .large)
+        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
+        loadingIndicator.startAnimating()
+        loadingAlert.view.addSubview(loadingIndicator)
+        NSLayoutConstraint.activate([
+            loadingIndicator.centerXAnchor.constraint(equalTo: loadingAlert.view.centerXAnchor),
+            loadingIndicator.topAnchor.constraint(equalTo: loadingAlert.view.topAnchor, constant: 20),
+            loadingIndicator.bottomAnchor.constraint(equalTo: loadingAlert.view.bottomAnchor, constant: -20)
+        ])
+        present(loadingAlert, animated: true)
+        
+        // Process import asynchronously
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
             
-            // Import the properties
-            if dataManager.importPropertiesFromJSON(data) {
-                loadProperties()
-                
-                let alert = UIAlertController(
-                    title: "Import Successful",
-                    message: "Properties have been imported successfully.",
-                    preferredStyle: .alert
-                )
-                alert.addAction(UIAlertAction(title: "OK", style: .default))
-                present(alert, animated: true)
-            } else {
-                showImportError(message: "The file format is invalid or could not be read.")
+            // Request access to the security-scoped resource
+            let hasAccess = url.startAccessingSecurityScopedResource()
+            
+            // Read the file data
+            do {
+                var data: Data?
+            
+            // Try to read the file directly first
+            do {
+                data = try Data(contentsOf: url)
+            } catch {
+                // If direct read fails, try copying to a temporary location
+                let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".json")
+                do {
+                    try FileManager.default.copyItem(at: url, to: tempURL)
+                    data = try Data(contentsOf: tempURL)
+                    try? FileManager.default.removeItem(at: tempURL)
+                } catch {
+                    // If copy fails, try using file coordinator
+                    let fileCoordinator = NSFileCoordinator()
+                    var coordinationError: NSError?
+                    var readData: Data?
+                    
+                    fileCoordinator.coordinate(readingItemAt: url, options: [], error: &coordinationError) { (coordinatedURL) in
+                        do {
+                            readData = try Data(contentsOf: coordinatedURL)
+                        } catch {
+                            // Last resort: try reading without coordination
+                            readData = try? Data(contentsOf: url)
+                        }
+                    }
+                    
+                    if let error = coordinationError {
+                        throw error
+                    }
+                    
+                    guard let finalData = readData else {
+                        throw NSError(domain: "ImportError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unable to read file data"])
+                    }
+                    data = finalData
+                }
             }
-        } catch {
-            showImportError(message: "Failed to read the file: \(error.localizedDescription)")
+            
+                guard let fileData = data else {
+                    DispatchQueue.main.async {
+                        loadingAlert.dismiss(animated: true) {
+                            self.showImportError(message: "Unable to read the file data.")
+                        }
+                    }
+                    if hasAccess {
+                        url.stopAccessingSecurityScopedResource()
+                    }
+                    return
+                }
+                
+                // Stop accessing the security-scoped resource before processing
+                if hasAccess {
+                    url.stopAccessingSecurityScopedResource()
+                }
+                
+                // Import the properties
+                if self.dataManager.importPropertiesFromJSON(fileData) {
+                    // Get count of imported properties for feedback
+                    let importedProperties = self.dataManager.loadProperties()
+                    let propertyCount = importedProperties.count
+                    
+                    DispatchQueue.main.async {
+                        loadingAlert.dismiss(animated: true) {
+                            self.loadProperties()
+                            
+                            let alert = UIAlertController(
+                                title: "✓ Import Successful",
+                                message: "Successfully imported \(propertyCount) propert\(propertyCount == 1 ? "y" : "ies") from \(fileName).",
+                                preferredStyle: .alert
+                            )
+                            alert.addAction(UIAlertAction(title: "OK", style: .default))
+                            self.present(alert, animated: true)
+                        }
+                    }
+                } else {
+                    DispatchQueue.main.async {
+                        loadingAlert.dismiss(animated: true) {
+                            self.showImportError(message: "The file format is invalid. Please ensure the file is a valid JSON file with property data.")
+                        }
+                    }
+                }
+            } catch {
+                if hasAccess {
+                    url.stopAccessingSecurityScopedResource()
+                }
+                DispatchQueue.main.async {
+                    loadingAlert.dismiss(animated: true) {
+                        self.showImportError(message: "Failed to read \(fileName): \(error.localizedDescription)")
+                    }
+                }
+            }
         }
     }
     
