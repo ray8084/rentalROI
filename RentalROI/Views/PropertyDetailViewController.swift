@@ -263,17 +263,22 @@ class PropertyDetailViewController: UIViewController {
         
         // Add delete button only when editing an existing property
         if isEditingMode {
-            stackView.addArrangedSubview(deleteButton)
-            NSLayoutConstraint.activate([
-                deleteButton.heightAnchor.constraint(equalToConstant: 50)
-            ])
+            view.addSubview(deleteButton)
+        }
+        
+        var scrollViewBottomConstraint: NSLayoutConstraint
+        if isEditingMode {
+            // When delete button is visible, scrollView should end above it (10pt spacing + 50pt button height = 60pt)
+            scrollViewBottomConstraint = scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -60)
+        } else {
+            scrollViewBottomConstraint = scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         }
         
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            scrollViewBottomConstraint,
             
             contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
             contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
@@ -286,6 +291,16 @@ class PropertyDetailViewController: UIViewController {
             stackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             stackView.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -20)
         ])
+        
+        // Position delete button 10 points above the bottom
+        if isEditingMode {
+            NSLayoutConstraint.activate([
+                deleteButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+                deleteButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+                deleteButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -10),
+                deleteButton.heightAnchor.constraint(equalToConstant: 50)
+            ])
+        }
         
         if let property = property {
             nameTextField.text = property.name
