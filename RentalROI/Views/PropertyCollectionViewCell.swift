@@ -46,6 +46,20 @@ class PropertyCollectionViewCell: UICollectionViewCell {
         return label
     }()
     
+    private let totalReturnLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 14)
+        label.textColor = .secondaryLabel
+        return label
+    }()
+    
+    private let purchaseYearLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 14)
+        label.textColor = .secondaryLabel
+        return label
+    }()
+    
     private let roiLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 32)
@@ -104,6 +118,8 @@ class PropertyCollectionViewCell: UICollectionViewCell {
         // Left column: Property details
         leftColumnStackView.addArrangedSubview(nameLabel)
         leftColumnStackView.addArrangedSubview(initialInvestmentLabel)
+        leftColumnStackView.addArrangedSubview(totalReturnLabel)
+        leftColumnStackView.addArrangedSubview(purchaseYearLabel)
         leftColumnStackView.addArrangedSubview(appreciationLabel)
         leftColumnStackView.addArrangedSubview(rentalIncomeLabel)
         leftColumnStackView.addArrangedSubview(totalExpensesLabel)
@@ -144,6 +160,19 @@ class PropertyCollectionViewCell: UICollectionViewCell {
         nameLabel.text = property.name
         initialInvestmentLabel.text = "Investment: \(currencyFormatter.string(from: NSNumber(value: property.initialInvestment)) ?? "$0")"
         
+        // Calculate total return over entire time frame
+        let currentYear = Calendar.current.component(.year, from: Date())
+        let years = max(1, currentYear - property.purchaseYearValue)
+        let cumulativeRent = property.totalRentalIncome * Double(years)
+        let cumulativeExpenses = property.totalExpenses * Double(years)
+        let cumulativeNetRentalIncome = cumulativeRent - cumulativeExpenses
+        
+        // Total return = Appreciation + Net Rental Income
+        // Note: Tax savings are already included in totalExpenses (they reduce expenses),
+        // so we don't add them separately to avoid double-counting
+        let totalReturn = property.appreciation + cumulativeNetRentalIncome
+        totalReturnLabel.text = "Total Return: \(currencyFormatter.string(from: NSNumber(value: totalReturn)) ?? "$0")"
+        
         let roiValue = property.roi
         roiLabel.text = String(format: "%.1f%%", roiValue)
         let appGreen = UIColor(red: 120/255.0, green: 180/255.0, blue: 60/255.0, alpha: 1.0)
@@ -151,23 +180,22 @@ class PropertyCollectionViewCell: UICollectionViewCell {
         
         // Show/hide labels based on view mode
         if isSummaryMode {
-            // Summary view: only show name, investment, and ROI
+            // Summary view: show name, investment, total return, and ROI
+            totalReturnLabel.isHidden = false
+            purchaseYearLabel.isHidden = true
             appreciationLabel.isHidden = true
             rentalIncomeLabel.isHidden = true
             totalExpensesLabel.isHidden = true
         } else {
             // Details view: show all information
+            totalReturnLabel.isHidden = true
+            purchaseYearLabel.isHidden = false
             appreciationLabel.isHidden = false
             rentalIncomeLabel.isHidden = false
             totalExpensesLabel.isHidden = false
             
+            purchaseYearLabel.text = "Purchase Year: \(property.purchaseYearValue)"
             appreciationLabel.text = "Appreciation: \(currencyFormatter.string(from: NSNumber(value: property.appreciation)) ?? "$0")"
-            
-            // Calculate cumulative totals (annual amounts × years since purchase)
-            let currentYear = Calendar.current.component(.year, from: Date())
-            let years = max(1, currentYear - property.purchaseYearValue)
-            let cumulativeRent = property.totalRentalIncome * Double(years)
-            let cumulativeExpenses = property.totalExpenses * Double(years)
             
             rentalIncomeLabel.text = "Total Rent: \(currencyFormatter.string(from: NSNumber(value: cumulativeRent)) ?? "$0")"
             totalExpensesLabel.text = "Total Expenses: \(currencyFormatter.string(from: NSNumber(value: cumulativeExpenses)) ?? "$0")"
@@ -178,11 +206,15 @@ class PropertyCollectionViewCell: UICollectionViewCell {
         super.prepareForReuse()
         nameLabel.text = nil
         initialInvestmentLabel.text = nil
+        totalReturnLabel.text = nil
+        purchaseYearLabel.text = nil
         appreciationLabel.text = nil
         rentalIncomeLabel.text = nil
         totalExpensesLabel.text = nil
         roiLabel.text = nil
         // Reset visibility
+        totalReturnLabel.isHidden = false
+        purchaseYearLabel.isHidden = false
         appreciationLabel.isHidden = false
         rentalIncomeLabel.isHidden = false
         totalExpensesLabel.isHidden = false

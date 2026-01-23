@@ -491,8 +491,9 @@ extension PropertyListViewController: UICollectionViewDelegateFlowLayout {
         let itemsPerRow: CGFloat = 1
         let totalSpacing = layout.minimumInteritemSpacing * (itemsPerRow - 1) + layout.sectionInset.left + layout.sectionInset.right
         let itemWidth = (collectionView.bounds.width - totalSpacing) / itemsPerRow
-        // Adjust height based on view mode: summary is shorter, details is taller
-        let itemHeight: CGFloat = viewMode == .summary ? 80 : 140
+        // Adjust height based on view mode: summary shows name, investment, total return, and ROI
+        // Details view includes: name, investment, purchase year, appreciation, total rent, total expenses, and ROI
+        let itemHeight: CGFloat = viewMode == .summary ? 100 : 170
         return CGSize(width: itemWidth, height: itemHeight)
     }
 }
