@@ -91,7 +91,10 @@ class PropertyCollectionViewCell: UICollectionViewCell {
     }
     
     private func setupUI() {
-        contentView.backgroundColor = .systemBackground
+        // Use systemBackground in light mode, secondarySystemGroupedBackground in dark mode (lighter than main background)
+        contentView.backgroundColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? .secondarySystemGroupedBackground : .systemBackground
+        }
         contentView.layer.cornerRadius = 12
         contentView.layer.shadowColor = UIColor.black.cgColor
         contentView.layer.shadowOffset = CGSize(width: 0, height: 2)
