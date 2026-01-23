@@ -15,6 +15,13 @@ class PropertyListViewController: UIViewController {
     private var importProgressVC: ImportProgressViewController?
     private var importBackup: Data?
     private var importCancelled = false
+    private var viewMode: ViewMode = .details
+    private var segmentedControl: UISegmentedControl!
+    
+    enum ViewMode {
+        case summary
+        case details
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -30,6 +37,12 @@ class PropertyListViewController: UIViewController {
     private func setupUI() {
         title = "Real ROI"
         view.backgroundColor = .systemGroupedBackground
+        
+        // Setup segmented control for view mode toggle
+        segmentedControl = UISegmentedControl(items: ["Summary", "Details"])
+        segmentedControl.selectedSegmentIndex = 1 // Default to Details
+        segmentedControl.addTarget(self, action: #selector(viewModeChanged), for: .valueChanged)
+        navigationItem.titleView = segmentedControl
         
         // Setup navigation bar
         navigationItem.rightBarButtonItem = UIBarButtonItem(
@@ -185,6 +198,11 @@ class PropertyListViewController: UIViewController {
         }
         
         present(documentPicker, animated: true)
+    }
+    
+    @objc private func viewModeChanged() {
+        viewMode = segmentedControl.selectedSegmentIndex == 0 ? .summary : .details
+        collectionView.reloadData()
     }
 }
 
@@ -421,7 +439,7 @@ extension PropertyListViewController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PropertyCollectionViewCell.identifier, for: indexPath) as! PropertyCollectionViewCell
-        cell.configure(with: properties[indexPath.item])
+        cell.configure(with: properties[indexPath.item], isSummaryMode: viewMode == .summary)
         return cell
     }
 }
@@ -473,6 +491,8 @@ extension PropertyListViewController: UICollectionViewDelegateFlowLayout {
         let itemsPerRow: CGFloat = 1
         let totalSpacing = layout.minimumInteritemSpacing * (itemsPerRow - 1) + layout.sectionInset.left + layout.sectionInset.right
         let itemWidth = (collectionView.bounds.width - totalSpacing) / itemsPerRow
-        return CGSize(width: itemWidth, height: 140)
+        // Adjust height based on view mode: summary is shorter, details is taller
+        let itemHeight: CGFloat = viewMode == .summary ? 80 : 140
+        return CGSize(width: itemWidth, height: itemHeight)
     }
 }

@@ -130,7 +130,7 @@ class PropertyCollectionViewCell: UICollectionViewCell {
         ])
     }
     
-    func configure(with property: Property) {
+    func configure(with property: Property, isSummaryMode: Bool) {
         let currencyFormatter = NumberFormatter()
         currencyFormatter.numberStyle = .currency
         currencyFormatter.maximumFractionDigits = 0
@@ -143,21 +143,35 @@ class PropertyCollectionViewCell: UICollectionViewCell {
         
         nameLabel.text = property.name
         initialInvestmentLabel.text = "Investment: \(currencyFormatter.string(from: NSNumber(value: property.initialInvestment)) ?? "$0")"
-        appreciationLabel.text = "Appreciation: \(currencyFormatter.string(from: NSNumber(value: property.appreciation)) ?? "$0")"
-        
-        // Calculate cumulative totals (annual amounts × years since purchase)
-        let currentYear = Calendar.current.component(.year, from: Date())
-        let years = max(1, currentYear - property.purchaseYearValue)
-        let cumulativeRent = property.totalRentalIncome * Double(years)
-        let cumulativeExpenses = property.totalExpenses * Double(years)
-        
-        rentalIncomeLabel.text = "Total Rent: \(currencyFormatter.string(from: NSNumber(value: cumulativeRent)) ?? "$0")"
-        totalExpensesLabel.text = "Total Expenses: \(currencyFormatter.string(from: NSNumber(value: cumulativeExpenses)) ?? "$0")"
         
         let roiValue = property.roi
         roiLabel.text = String(format: "%.1f%%", roiValue)
         let appGreen = UIColor(red: 120/255.0, green: 180/255.0, blue: 60/255.0, alpha: 1.0)
         roiLabel.textColor = roiValue >= 0 ? appGreen : .systemRed
+        
+        // Show/hide labels based on view mode
+        if isSummaryMode {
+            // Summary view: only show name, investment, and ROI
+            appreciationLabel.isHidden = true
+            rentalIncomeLabel.isHidden = true
+            totalExpensesLabel.isHidden = true
+        } else {
+            // Details view: show all information
+            appreciationLabel.isHidden = false
+            rentalIncomeLabel.isHidden = false
+            totalExpensesLabel.isHidden = false
+            
+            appreciationLabel.text = "Appreciation: \(currencyFormatter.string(from: NSNumber(value: property.appreciation)) ?? "$0")"
+            
+            // Calculate cumulative totals (annual amounts × years since purchase)
+            let currentYear = Calendar.current.component(.year, from: Date())
+            let years = max(1, currentYear - property.purchaseYearValue)
+            let cumulativeRent = property.totalRentalIncome * Double(years)
+            let cumulativeExpenses = property.totalExpenses * Double(years)
+            
+            rentalIncomeLabel.text = "Total Rent: \(currencyFormatter.string(from: NSNumber(value: cumulativeRent)) ?? "$0")"
+            totalExpensesLabel.text = "Total Expenses: \(currencyFormatter.string(from: NSNumber(value: cumulativeExpenses)) ?? "$0")"
+        }
     }
     
     override func prepareForReuse() {
@@ -168,5 +182,9 @@ class PropertyCollectionViewCell: UICollectionViewCell {
         rentalIncomeLabel.text = nil
         totalExpensesLabel.text = nil
         roiLabel.text = nil
+        // Reset visibility
+        appreciationLabel.isHidden = false
+        rentalIncomeLabel.isHidden = false
+        totalExpensesLabel.isHidden = false
     }
 }
