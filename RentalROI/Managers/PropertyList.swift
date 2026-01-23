@@ -50,4 +50,12 @@ class PropertyList {
         let properties = loadProperties()
         return try? JSONEncoder().encode(properties)
     }
+    
+    func importPropertiesFromJSON(_ data: Data) -> Bool {
+        guard let properties = try? JSONDecoder().decode([Property].self, from: data) else {
+            return false
+        }
+        saveProperties(properties)
+        return true
+    }
 }

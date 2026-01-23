@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import MobileCoreServices
 
 class PropertyListViewController: UIViewController {
     private var collectionView: UICollectionView!
@@ -34,11 +35,7 @@ class PropertyListViewController: UIViewController {
             action: #selector(addPropertyTapped)
         )
         
-        navigationItem.leftBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .action,
-            target: self,
-            action: #selector(shareProperties)
-        )
+        updateLeftBarButton()
         
         // Setup collection view layout
         let layout = UICollectionViewFlowLayout()
@@ -73,6 +70,28 @@ class PropertyListViewController: UIViewController {
     private func loadProperties() {
         properties = dataManager.loadProperties()
         collectionView.reloadData()
+        updateLeftBarButton()
+    }
+    
+    private func updateLeftBarButton() {
+        if properties.isEmpty {
+            // Show import button when empty
+            let importButton = UIBarButtonItem(
+                image: UIImage(systemName: "square.and.arrow.down"),
+                style: .plain,
+                target: self,
+                action: #selector(importProperties)
+            )
+            importButton.accessibilityLabel = "Import Properties"
+            navigationItem.leftBarButtonItem = importButton
+        } else {
+            // Show export button when there are properties
+            navigationItem.leftBarButtonItem = UIBarButtonItem(
+                barButtonSystemItem: .action,
+                target: self,
+                action: #selector(shareProperties)
+            )
+        }
     }
     
     @objc private func addPropertyTapped() {
@@ -149,6 +168,69 @@ class PropertyListViewController: UIViewController {
         }
         
         present(activityViewController, animated: true)
+    }
+    
+    @objc private func importProperties() {
+        // Use kUTTypeJSON for iOS 13.0 compatibility
+        let documentPicker = UIDocumentPickerViewController(documentTypes: [kUTTypeJSON as String], in: .import)
+        documentPicker.delegate = self
+        documentPicker.allowsMultipleSelection = false
+        
+        // For iPad support
+        if let popover = documentPicker.popoverPresentationController {
+            popover.barButtonItem = navigationItem.leftBarButtonItem
+        }
+        
+        present(documentPicker, animated: true)
+    }
+}
+
+extension PropertyListViewController: UIDocumentPickerDelegate {
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        guard let url = urls.first else { return }
+        
+        // Check if we have access to the file
+        guard url.startAccessingSecurityScopedResource() else {
+            showImportError(message: "Unable to access the selected file.")
+            return
+        }
+        defer { url.stopAccessingSecurityScopedResource() }
+        
+        // Read the file data
+        do {
+            let data = try Data(contentsOf: url)
+            
+            // Import the properties
+            if dataManager.importPropertiesFromJSON(data) {
+                loadProperties()
+                
+                let alert = UIAlertController(
+                    title: "Import Successful",
+                    message: "Properties have been imported successfully.",
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                present(alert, animated: true)
+            } else {
+                showImportError(message: "The file format is invalid or could not be read.")
+            }
+        } catch {
+            showImportError(message: "Failed to read the file: \(error.localizedDescription)")
+        }
+    }
+    
+    func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+        // User cancelled, do nothing
+    }
+    
+    private func showImportError(message: String) {
+        let alert = UIAlertController(
+            title: "Import Error",
+            message: message,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
 }
 
