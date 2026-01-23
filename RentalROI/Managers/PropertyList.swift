@@ -58,4 +58,12 @@ class PropertyList {
         saveProperties(properties)
         return true
     }
+    
+    func createBackup() -> Data? {
+        return exportPropertiesAsJSON()
+    }
+    
+    func restoreFromBackup(_ backupData: Data) -> Bool {
+        return importPropertiesFromJSON(backupData)
+    }
 }

@@ -15,6 +15,7 @@
 		865B7984 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E27F4BE5 /* SceneDelegate.swift */; };
 		F4EA7EE6 /* PropertyList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C64387C /* PropertyList.swift */; };
 		B8A1C2D3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B8A1C2D2 /* Assets.xcassets */; };
+		D5A2B3C4 /* ImportProgressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A2B3C3 /* ImportProgressViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +28,7 @@
 		A4415625 /* PropertyCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyCollectionViewCell.swift; sourceTree = "<group>"; };
 		B8A1C2D2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C301E7BB /* RentalROI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RentalROI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D5A2B3C3 /* ImportProgressViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportProgressViewController.swift; sourceTree = "<group>"; };
 		E27F4BE5 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -87,6 +89,7 @@
 				3E18E6EB /* PropertyListViewController.swift */,
 				A4415625 /* PropertyCollectionViewCell.swift */,
 				59786DEE /* PropertyDetailViewController.swift */,
+				D5A2B3C3 /* ImportProgressViewController.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -181,6 +184,7 @@
 				2C68EB90 /* PropertyListViewController.swift in Sources */,
 				2C97CFDA /* PropertyCollectionViewCell.swift in Sources */,
 				75D6F9BA /* PropertyDetailViewController.swift in Sources */,
+				D5A2B3C4 /* ImportProgressViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

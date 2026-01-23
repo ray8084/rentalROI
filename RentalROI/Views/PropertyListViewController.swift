@@ -12,6 +12,9 @@ class PropertyListViewController: UIViewController {
     private var collectionView: UICollectionView!
     private var properties: [Property] = []
     private let dataManager = PropertyList()
+    private var importProgressVC: ImportProgressViewController?
+    private var importBackup: Data?
+    private var importCancelled = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -191,117 +194,151 @@ extension PropertyListViewController: UIDocumentPickerDelegate {
         
         let fileName = url.lastPathComponent
         
-        // Show loading indicator
-        let loadingAlert = UIAlertController(title: nil, message: "Importing \(fileName)...", preferredStyle: .alert)
-        let loadingIndicator = UIActivityIndicatorView(style: .large)
-        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
-        loadingIndicator.startAnimating()
-        loadingAlert.view.addSubview(loadingIndicator)
-        NSLayoutConstraint.activate([
-            loadingIndicator.centerXAnchor.constraint(equalTo: loadingAlert.view.centerXAnchor),
-            loadingIndicator.topAnchor.constraint(equalTo: loadingAlert.view.topAnchor, constant: 20),
-            loadingIndicator.bottomAnchor.constraint(equalTo: loadingAlert.view.bottomAnchor, constant: -20)
-        ])
-        present(loadingAlert, animated: true)
+        // 1. Dismiss picker immediately
+        controller.dismiss(animated: true)
         
-        // Process import asynchronously
+        // 2. Create backup for undo
+        importBackup = dataManager.createBackup()
+        importCancelled = false
+        
+        // 3. Show custom progress UI
+        let progressVC = ImportProgressViewController()
+        progressVC.setFileName(fileName)
+        progressVC.modalPresentationStyle = .overFullScreen
+        progressVC.onCancel = { [weak self] in
+            self?.importCancelled = true
+            progressVC.dismiss(animated: true)
+        }
+        importProgressVC = progressVC
+        present(progressVC, animated: true)
+        
+        // 4. Process import on background thread
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            guard let self = self else { return }
+            guard let self = self, !self.importCancelled else { return }
             
             // Request access to the security-scoped resource
             let hasAccess = url.startAccessingSecurityScopedResource()
-            
-            // Read the file data
-            do {
-                var data: Data?
-            
-            // Try to read the file directly first
-            do {
-                data = try Data(contentsOf: url)
-            } catch {
-                // If direct read fails, try copying to a temporary location
-                let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".json")
-                do {
-                    try FileManager.default.copyItem(at: url, to: tempURL)
-                    data = try Data(contentsOf: tempURL)
-                    try? FileManager.default.removeItem(at: tempURL)
-                } catch {
-                    // If copy fails, try using file coordinator
-                    let fileCoordinator = NSFileCoordinator()
-                    var coordinationError: NSError?
-                    var readData: Data?
-                    
-                    fileCoordinator.coordinate(readingItemAt: url, options: [], error: &coordinationError) { (coordinatedURL) in
-                        do {
-                            readData = try Data(contentsOf: coordinatedURL)
-                        } catch {
-                            // Last resort: try reading without coordination
-                            readData = try? Data(contentsOf: url)
-                        }
-                    }
-                    
-                    if let error = coordinationError {
-                        throw error
-                    }
-                    
-                    guard let finalData = readData else {
-                        throw NSError(domain: "ImportError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unable to read file data"])
-                    }
-                    data = finalData
+            defer {
+                if hasAccess {
+                    url.stopAccessingSecurityScopedResource()
                 }
             }
             
-                guard let fileData = data else {
-                    DispatchQueue.main.async {
-                        loadingAlert.dismiss(animated: true) {
-                            self.showImportError(message: "Unable to read the file data.")
+            do {
+                // Stage 1: Check if file needs downloading from iCloud
+                var resourceValues = try url.resourceValues(forKeys: [.isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey])
+                
+                if let isUbiquitous = resourceValues.isUbiquitousItem, isUbiquitous {
+                    // Check download status (available in iOS 13.0+)
+                    if let downloadStatus = resourceValues.ubiquitousItemDownloadingStatus {
+                        // .notDownloaded and .downloading are the enum cases
+                        if downloadStatus == URLUbiquitousItemDownloadingStatus.notDownloaded {
+                            DispatchQueue.main.async {
+                                progressVC.updateStage(.downloading)
+                            }
+                            
+                            // Start downloading from iCloud
+                            try FileManager.default.startDownloadingUbiquitousItem(at: url)
+                            
+                            // Wait for download to complete (with timeout)
+                            // Check periodically for up to 15 seconds
+                            for _ in 0..<30 {
+                                if self.importCancelled { return }
+                                
+                                do {
+                                    resourceValues = try url.resourceValues(forKeys: [.ubiquitousItemDownloadingStatusKey])
+                                    if let status = resourceValues.ubiquitousItemDownloadingStatus, status == URLUbiquitousItemDownloadingStatus.current {
+                                        break
+                                    }
+                                } catch {
+                                    // Continue checking
+                                }
+                                
+                                // Wait 0.5 seconds before next check
+                                RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.5))
+                            }
+                            
+                            if self.importCancelled { return }
                         }
                     }
-                    if hasAccess {
-                        url.stopAccessingSecurityScopedResource()
+                }
+                
+                // Stage 2: Copy file to local sandbox
+                DispatchQueue.main.async {
+                    progressVC.updateStage(.copying)
+                }
+                
+                let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+                let importsDir = appSupport.appendingPathComponent("Imports", isDirectory: true)
+                try? FileManager.default.createDirectory(at: importsDir, withIntermediateDirectories: true)
+                
+                let localURL = importsDir.appendingPathComponent(UUID().uuidString + ".json")
+                try FileManager.default.copyItem(at: url, to: localURL)
+                defer {
+                    try? FileManager.default.removeItem(at: localURL)
+                }
+                
+                if self.importCancelled { return }
+                
+                // Stage 3: Read file
+                DispatchQueue.main.async {
+                    progressVC.updateStage(.reading)
+                }
+                
+                let fileData = try Data(contentsOf: localURL)
+                
+                if self.importCancelled { return }
+                
+                // Stage 4: Validate JSON
+                DispatchQueue.main.async {
+                    progressVC.updateStage(.validating)
+                }
+                
+                guard let _ = try? JSONDecoder().decode([Property].self, from: fileData) else {
+                    throw NSError(domain: "ImportError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid JSON format or file structure"])
+                }
+                
+                if self.importCancelled { return }
+                
+                // Stage 5: Import
+                DispatchQueue.main.async {
+                    progressVC.updateStage(.importing)
+                }
+                
+                guard self.dataManager.importPropertiesFromJSON(fileData) else {
+                    throw NSError(domain: "ImportError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to import properties"])
+                }
+                
+                if self.importCancelled {
+                    // Restore backup if cancelled during import
+                    if let backup = self.importBackup {
+                        _ = self.dataManager.restoreFromBackup(backup)
                     }
                     return
                 }
                 
-                // Stop accessing the security-scoped resource before processing
-                if hasAccess {
-                    url.stopAccessingSecurityScopedResource()
+                // Stage 6: Complete
+                let importedProperties = self.dataManager.loadProperties()
+                let propertyCount = importedProperties.count
+                
+                DispatchQueue.main.async {
+                    progressVC.updateStage(.complete)
+                    self.loadProperties()
+                    
+                    // Show toast notification
+                    self.showToast(message: "Imported \(propertyCount) propert\(propertyCount == 1 ? "y" : "ies")")
+                    
+                    // Show results after a brief delay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        progressVC.dismiss(animated: true) {
+                            self.showImportResults(propertyCount: propertyCount, fileName: fileName)
+                        }
+                    }
                 }
                 
-                // Import the properties
-                if self.dataManager.importPropertiesFromJSON(fileData) {
-                    // Get count of imported properties for feedback
-                    let importedProperties = self.dataManager.loadProperties()
-                    let propertyCount = importedProperties.count
-                    
-                    DispatchQueue.main.async {
-                        loadingAlert.dismiss(animated: true) {
-                            self.loadProperties()
-                            
-                            let alert = UIAlertController(
-                                title: "✓ Import Successful",
-                                message: "Successfully imported \(propertyCount) propert\(propertyCount == 1 ? "y" : "ies") from \(fileName).",
-                                preferredStyle: .alert
-                            )
-                            alert.addAction(UIAlertAction(title: "OK", style: .default))
-                            self.present(alert, animated: true)
-                        }
-                    }
-                } else {
-                    DispatchQueue.main.async {
-                        loadingAlert.dismiss(animated: true) {
-                            self.showImportError(message: "The file format is invalid. Please ensure the file is a valid JSON file with property data.")
-                        }
-                    }
-                }
             } catch {
-                if hasAccess {
-                    url.stopAccessingSecurityScopedResource()
-                }
                 DispatchQueue.main.async {
-                    loadingAlert.dismiss(animated: true) {
-                        self.showImportError(message: "Failed to read \(fileName): \(error.localizedDescription)")
-                    }
+                    progressVC.updateStage(.error(error.localizedDescription))
                 }
             }
         }
@@ -319,6 +356,70 @@ extension PropertyListViewController: UIDocumentPickerDelegate {
         )
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
+    }
+    
+    private func showToast(message: String) {
+        let toastLabel = UILabel()
+        toastLabel.text = message
+        toastLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        toastLabel.textColor = .white
+        toastLabel.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        toastLabel.textAlignment = .center
+        toastLabel.layer.cornerRadius = 12
+        toastLabel.clipsToBounds = true
+        toastLabel.translatesAutoresizingMaskIntoConstraints = false
+        toastLabel.alpha = 0
+        
+        view.addSubview(toastLabel)
+        
+        NSLayoutConstraint.activate([
+            toastLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            toastLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
+            toastLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 40),
+            toastLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -40),
+            toastLabel.heightAnchor.constraint(equalToConstant: 50)
+        ])
+        
+        UIView.animate(withDuration: 0.3) {
+            toastLabel.alpha = 1
+        } completion: { _ in
+            UIView.animate(withDuration: 0.3, delay: 2.0) {
+                toastLabel.alpha = 0
+            } completion: { _ in
+                toastLabel.removeFromSuperview()
+            }
+        }
+    }
+    
+    private func showImportResults(propertyCount: Int, fileName: String) {
+        let alert = UIAlertController(
+            title: "Import Complete",
+            message: "Successfully imported \(propertyCount) propert\(propertyCount == 1 ? "y" : "ies") from \(fileName).",
+            preferredStyle: .alert
+        )
+        
+        // Add undo option if backup exists
+        if importBackup != nil {
+            alert.addAction(UIAlertAction(title: "Undo Import", style: .destructive) { [weak self] _ in
+                self?.undoLastImport()
+            })
+        }
+        
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
+    private func undoLastImport() {
+        guard let backup = importBackup else { return }
+        
+        if dataManager.restoreFromBackup(backup) {
+            loadProperties()
+            showToast(message: "Import undone")
+        } else {
+            showImportError(message: "Failed to undo import")
+        }
+        
+        importBackup = nil
     }
 }
 
