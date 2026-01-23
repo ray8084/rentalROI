@@ -15,7 +15,7 @@ class PropertyListViewController: UIViewController {
     private var importProgressVC: ImportProgressViewController?
     private var importBackup: Data?
     private var importCancelled = false
-    private var viewMode: ViewMode = .details
+    private var viewMode: ViewMode = .summary
     private var segmentedControl: UISegmentedControl!
     
     enum ViewMode {
@@ -40,7 +40,7 @@ class PropertyListViewController: UIViewController {
         
         // Setup segmented control for view mode toggle
         segmentedControl = UISegmentedControl(items: ["Summary", "Details"])
-        segmentedControl.selectedSegmentIndex = 1 // Default to Details
+        segmentedControl.selectedSegmentIndex = 0 // Default to Summary
         segmentedControl.addTarget(self, action: #selector(viewModeChanged), for: .valueChanged)
         navigationItem.titleView = segmentedControl
         

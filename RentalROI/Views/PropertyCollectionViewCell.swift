@@ -167,11 +167,11 @@ class PropertyCollectionViewCell: UICollectionViewCell {
         let cumulativeExpenses = property.totalExpenses * Double(years)
         let cumulativeNetRentalIncome = cumulativeRent - cumulativeExpenses
         
-        // Total return = Appreciation + Net Rental Income
+        // Gains = Appreciation + Net Rental Income
         // Note: Tax savings are already included in totalExpenses (they reduce expenses),
         // so we don't add them separately to avoid double-counting
         let totalReturn = property.appreciation + cumulativeNetRentalIncome
-        totalReturnLabel.text = "Total Return: \(currencyFormatter.string(from: NSNumber(value: totalReturn)) ?? "$0")"
+        totalReturnLabel.text = "Gains: \(currencyFormatter.string(from: NSNumber(value: totalReturn)) ?? "$0")"
         
         let roiValue = property.roi
         roiLabel.text = String(format: "%.1f%%", roiValue)
